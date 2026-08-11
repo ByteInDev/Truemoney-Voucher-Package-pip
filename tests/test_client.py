@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import socket
 import urllib.error
 from typing import Any
 
@@ -29,7 +28,7 @@ class FakeResponse:
     def getcode(self) -> int:
         return self.status
 
-    def __enter__(self) -> "FakeResponse":
+    def __enter__(self) -> FakeResponse:
         return self
 
     def __exit__(self, *exc: Any) -> None:
@@ -46,7 +45,7 @@ class FakeHTTPError(urllib.error.HTTPError):
     def read(self) -> bytes:
         return self._body
 
-    def __enter__(self) -> "FakeHTTPError":
+    def __enter__(self) -> FakeHTTPError:
         return self
 
     def __exit__(self, *exc: Any) -> None:
@@ -74,7 +73,9 @@ def envelope(code: str, message: str = "OK") -> bytes:
 
 class TestRedeem:
     def test_success_returns_typed_result(self) -> None:
-        opener, captured = fake_urlopen({"/truemoney/ABC123/0812345678": FakeResponse(envelope("SUCCESS"))})  # type: ignore[call-arg]
+        opener, captured = fake_urlopen(
+            {"/truemoney/ABC123/0812345678": FakeResponse(envelope("SUCCESS"))}
+        )  # type: ignore[call-arg]
         client = create_client(provider="fastapi", urlopen=opener)
 
         result = client.redeem("ABC123", "0812345678")
@@ -110,7 +111,12 @@ class TestRedeem:
 
     def test_spring_error_body_raises_api_error(self) -> None:
         body = json.dumps(
-            {"timestamp": 1, "status": 400, "error": "Bad Request", "path": "/campaign/vouchers/x/redeem"}
+            {
+                "timestamp": 1,
+                "status": 400,
+                "error": "Bad Request",
+                "path": "/campaign/vouchers/x/redeem",
+            }
         ).encode()
         opener, _ = fake_urlopen({"/truemoney/ABC123/0812345678": FakeResponse(body)})  # type: ignore[call-arg]
         client = create_client(provider="fastapi", urlopen=opener)
@@ -136,7 +142,9 @@ class TestRedeem:
             client.redeem("ABC", "0812345678")
 
     def test_timeout_raises_timeout_error(self) -> None:
-        opener, _ = fake_urlopen({"/truemoney/ABC/0812345678": urllib.error.URLError(socket.timeout("timed out"))})  # type: ignore[call-arg]
+        opener, _ = fake_urlopen(
+            {"/truemoney/ABC/0812345678": urllib.error.URLError(TimeoutError("timed out"))}
+        )  # type: ignore[call-arg]
         client = create_client(provider="fastapi", urlopen=opener, timeout_ms=5_000)
 
         with pytest.raises(TruemoneyTimeoutError) as exc:
@@ -145,7 +153,9 @@ class TestRedeem:
         assert exc.value.timeout_ms == 5_000
 
     def test_connection_failure_raises_base_error(self) -> None:
-        opener, _ = fake_urlopen({"/truemoney/ABC/0812345678": urllib.error.URLError("connection refused")})  # type: ignore[call-arg]
+        opener, _ = fake_urlopen(
+            {"/truemoney/ABC/0812345678": urllib.error.URLError("connection refused")}
+        )  # type: ignore[call-arg]
         client = create_client(provider="fastapi", urlopen=opener)
 
         with pytest.raises(TruemoneyError) as exc:
@@ -162,7 +172,13 @@ class TestRedeem:
 
     def test_full_campaign_url_is_percent_encoded(self) -> None:
         code = "https://gift.truemoney.com/campaign/?v=AB CD"
-        opener, captured = fake_urlopen({"/truemoney/https%3A%2F%2Fgift.truemoney.com%2Fcampaign%2F%3Fv%3DAB%20CD/0812345678": FakeResponse(envelope("VOUCHER_NOT_FOUND"))})  # type: ignore[call-arg]
+        opener, captured = fake_urlopen(
+            {
+                "/truemoney/https%3A%2F%2Fgift.truemoney.com%2Fcampaign%2F%3Fv%3DAB%20CD/0812345678": FakeResponse(
+                    envelope("VOUCHER_NOT_FOUND")
+                )
+            }
+        )  # type: ignore[call-arg]
         client = create_client(provider="fastapi", urlopen=opener)
 
         client.redeem(code, "0812345678")

@@ -7,8 +7,10 @@ import socket
 import time
 import urllib.error
 import urllib.request
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, Callable, ClassVar
+from typing import Any, ClassVar
+from urllib.parse import quote
 
 from .errors import TruemoneyApiError, TruemoneyError, TruemoneyTimeoutError
 from .providers import PROVIDERS
@@ -256,7 +258,7 @@ class TruemoneyClient:
             if isinstance(error.reason, socket.timeout):
                 raise TruemoneyTimeoutError(self._timeout_ms) from error
             raise TruemoneyError(f"request failed: {error.reason}") from error
-        except socket.timeout as error:
+        except TimeoutError as error:
             raise TruemoneyTimeoutError(self._timeout_ms) from error
         except OSError as error:
             raise TruemoneyError(f"request failed: {error}") from error
@@ -342,6 +344,4 @@ class Client:
 
 def _quote(value: str) -> str:
     """Percent-encode a path segment (UTF-8, like JS ``encodeURIComponent``)."""
-    from urllib.parse import quote
-
     return quote(value, safe="")

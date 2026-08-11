@@ -14,7 +14,6 @@ from truemoney_voucher import (
     PROVIDERS,
     Client,
     TruemoneyApiError,
-    TruemoneyClient,
     create_client,
 )
 
@@ -37,7 +36,7 @@ class FakeResponse:
     def getcode(self) -> int:
         return self.status
 
-    def __enter__(self) -> "FakeResponse":
+    def __enter__(self) -> FakeResponse:
         return self
 
     def __exit__(self, *exc: Any) -> None:
@@ -103,7 +102,10 @@ class TestAutoProvider:
 
     def test_explicit_base_url_property(self) -> None:
         assert create_client(provider="fastapi").explicit_base_url == FAST
-        assert create_client(base_url="https://example.test").explicit_base_url == "https://example.test"
+        assert (
+            create_client(base_url="https://example.test").explicit_base_url
+            == "https://example.test"
+        )
         assert create_client().explicit_base_url is None  # auto
 
     def test_reuses_the_cached_ranking_within_ttl(self) -> None:
@@ -142,8 +144,6 @@ class TestAutoProvider:
     def test_does_not_fail_over_on_api_errors(self) -> None:
         def envelope_api_error() -> bytes:
             return json.dumps({"code": 400, "message": "Bad Request"}).encode()
-
-        orig_envelope = envelope
 
         def opener(request: Any, timeout: float | None = None) -> Any:
             raw = request.full_url

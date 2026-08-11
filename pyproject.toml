@@ -26,7 +26,7 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["pytest>=8"]
+dev = ["pytest>=8", "ruff>=0.9"]
 
 [project.urls]
 Homepage = "https://github.com/ByteInDev/Truemoney-Voucher-Package-pip"
@@ -34,6 +34,25 @@ Homepage = "https://github.com/ByteInDev/Truemoney-Voucher-Package-pip"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+truemoney_voucher = ["py.typed"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+extend-exclude = [".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+# Test fixtures keep long exact-URL mapping lines — wrapping them would
+# obscure the very payloads the tests assert on.
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
