@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "truemoney-voucher"
-version = "1.1.0"
+version = "1.1.1"
 description = "Zero-dependency client for the Truemoney-Voucher REST APIs (Go / NestJS / FastAPI ports) — auto-selects the fastest healthy backend and redeems TrueMoney gift vouchers with pip, uv, poetry or any Python runtime"
 readme = "README.md"
 requires-python = ">=3.10"
